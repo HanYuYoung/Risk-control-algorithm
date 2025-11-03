@@ -19,11 +19,13 @@ class DataGenerator:
     
     def _init_pools(self):
         """初始化设备池和IP池"""
-        for _ in range(200):
+        # 设备池：100个设备，模拟真实环境下设备复用
+        for _ in range(100):
             device_id = hashlib.md5(f"{random.random()}{time.time()}".encode()).hexdigest()
             self.device_pool.append(device_id)
         
-        for _ in range(100):
+        # IP池：50个IP，模拟真实环境下IP复用
+        for _ in range(50):
             ip = fake.ipv4()
             self.ip_pool.append(ip)
     

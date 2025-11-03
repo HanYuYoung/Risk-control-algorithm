@@ -29,6 +29,9 @@ def load_and_extract_features(data_file=None):
     print(f"加载训练数据: {data_file}")
     df = pd.read_csv(data_file)
     
+    # 按时间戳排序，确保聚集度特征能正确计算
+    df = df.sort_values('timestamp').reset_index(drop=True)
+    
     print(f"  原始样本数: {len(df)}")
     print(f"  正常样本: {np.sum(df['label']==0)}")
     print(f"  异常样本: {np.sum(df['label']==1)}")
@@ -73,6 +76,38 @@ def load_and_extract_features(data_file=None):
     
     print(f"\n[OK] 特征提取完成")
     print(f"  特征维度: {X.shape[1]} (增强版)")
+    
+    # 保存特征数据到CSV
+    feature_names = [
+        # 聚集度特征（8）
+        'ip_reg_count', 'device_reg_count', 'ip_device_count', 'device_ip_count',
+        'phone_device_count', 'ip_phone_count', 'same_ip_different_devices', 'same_device_different_phones',
+        # 行为特征（13）- 实际有13维
+        'page_stay_time', 'click_count', 'scroll_count', 'path_entropy',
+        'mouse_trajectory_entropy', 'request_frequency', 'clicks_per_second', 'scrolls_per_second',
+        'clicks_per_scroll', 'behavior_diversity', 'short_stay', 'low_interaction', 'high_frequency',
+        # 账号特征（5）
+        'phone_in_blacklist', 'phone_history_count', 'phone_segment', 'phone_is_virtual', 'phone_reg_time_span',
+        # 时间特征（6）
+        'hour', 'minute', 'day_of_week', 'is_workday', 'is_peak_hour', 'is_night',
+        # 设备指纹特征（8）
+        'device_hash', 'ip_hash', 'canvas_hash', 'is_mobile', 'is_chrome', 'is_safari',
+        'screen_area', 'device_fingerprint_uniqueness',
+        # 网络特征（4）
+        'estimated_latency', 'is_proxy_likely', 'ip_reputation_score', 'network_segment',
+        # 关联特征（4）
+        'ip_geolocation_consistency', 'registration_pattern_anomaly', 'cluster_score', 'multi_device_flag',
+        # 组合特征（5）
+        'risk_score_base', 'behavior_anomaly_score', 'device_anomaly_score', 'timing_anomaly_score', 'comprehensive_risk_score'
+    ]
+    
+    # 创建DataFrame并保存
+    feature_df = pd.DataFrame(X, columns=feature_names)
+    feature_df['label'] = y
+    
+    feature_file = os.path.join(DATA_DIR, 'features_data.csv')
+    feature_df.to_csv(feature_file, index=False)
+    print(f"[OK] 特征数据已保存: {feature_file}")
     
     return X, y
 
