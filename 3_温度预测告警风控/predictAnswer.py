@@ -1,8 +1,3 @@
-from keras.models import Sequential
-from keras.layers import LSTM, Dense,Dropout
-import tensorflow as tf
-import keras
-from keras.models import load_model
 import numpy as np
 
 # 预测序列

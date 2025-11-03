@@ -1,7 +1,5 @@
 from sklearn.cluster import KMeans
 import numpy as np
-import random
-
 
 def healthAssessment(arr):
     # 根据聚类找到数量最多（主簇）的簇，然后找到该簇的最大值，根据这个最大值告警
