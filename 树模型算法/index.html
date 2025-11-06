@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>决策树算法演进</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>树模型算法演进之路</h1>
+            <p class="subtitle">从基础CART到高效LightGBM的进化历程</p>
+        </header>
+
+        <div class="timeline-container">
+            <div class="timeline">
+                <div class="timeline-item" data-algo="cart">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h2>CART树</h2>
+                        <p class="timeline-desc">基础起点</p>
+                        <span class="timeline-year">1984</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item" data-algo="adaboost">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h2>AdaBoost</h2>
+                        <p class="timeline-desc">串行提升</p>
+                        <span class="timeline-year">1997</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item" data-algo="gbdt">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h2>GBDT</h2>
+                        <p class="timeline-desc">梯度提升</p>
+                        <span class="timeline-year">2001</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item" data-algo="xgboost">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h2>XGBoost</h2>
+                        <p class="timeline-desc">工程优化</p>
+                        <span class="timeline-year">2014</span>
+                    </div>
+                </div>
+
+                <div class="timeline-item" data-algo="lightgbm">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h2>LightGBM</h2>
+                        <p class="timeline-desc">极致高效</p>
+                        <span class="timeline-year">2017</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="algorithm-grid">
+            <div class="algorithm-card" onclick="window.location.href='cart.html'">
+                <div class="card-icon">🌲</div>
+                <h3>CART树</h3>
+                <p>基础单棵回归/分类树</p>
+            </div>
+
+            <div class="algorithm-card" onclick="window.location.href='adaboost.html'">
+                <div class="card-icon">📈</div>
+                <h3>AdaBoost</h3>
+                <p>串行提升，关注难点</p>
+            </div>
+
+            <div class="algorithm-card" onclick="window.location.href='gbdt.html'">
+                <div class="card-icon">⚡</div>
+                <h3>GBDT</h3>
+                <p>梯度提升，残差拟合</p>
+            </div>
+
+            <div class="algorithm-card" onclick="window.location.href='xgboost.html'">
+                <div class="card-icon">🚀</div>
+                <h3>XGBoost</h3>
+                <p>工程优化王者</p>
+            </div>
+
+            <div class="algorithm-card" onclick="window.location.href='lightgbm.html'">
+                <div class="card-icon">💡</div>
+                <h3>LightGBM</h3>
+                <p>极致高效</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>点击卡片或时间线了解更多</p>
+        </footer>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
+

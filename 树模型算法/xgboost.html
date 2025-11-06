@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XGBoost - 工程优化王者</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="detail-page">
+        <a href="index.html" class="back-button">← 返回主页</a>
+
+        <div class="algorithm-header">
+            <h1>🚀 XGBoost</h1>
+            <span class="tag">工程优化</span>
+        </div>
+
+        <div class="content-section">
+            <h2>📚 什么是XGBoost？</h2>
+            <p>XGBoost（eXtreme Gradient Boosting）是2014年提出的GBDT增强版。它在工程实现上做了大量优化，成为Kaggle竞赛的王者。</p>
+            
+            <div class="image-container">
+                <img src="images/xgboost.png" alt="XGBoost示意图">
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>🔑 核心优化</h2>
+            <ul style="line-height: 2; color: #555; list-style: none; padding-left: 0;">
+                <li><strong>二阶泰勒展开：</strong>更精确的损失函数近似，提升精度</li>
+                <li><strong>正则化：</strong>控制树复杂度（叶子节点数）和叶子权重，防止过拟合</li>
+                <li><strong>列采样：</strong>随机选择特征，类似随机森林，增强泛化</li>
+                <li><strong>稀疏感知：</strong>处理缺失值更智能</li>
+                <li><strong>并行化：</strong>支持并行计算，速度快</li>
+            </ul>
+        </div>
+
+        <div class="tip-box">
+            <strong>💡 通俗理解：</strong>GBDT的"加强版"，不仅学习残差，还考虑了很多工程细节：如何防止过拟合、如何加速计算、如何处理缺失值等。就像把一辆普通车升级成了F1赛车。
+        </div>
+
+        <div class="content-section">
+            <h2>⚙️ 核心机制详解</h2>
+            
+            <h3 style="color: #e67e22; margin-top: 15px; margin-bottom: 10px; font-size: 1.1em;">1. 二阶泰勒展开 - 更自然的梯度下降</h3>
+            <p>GBDT只用一阶梯度，XGBoost使用二阶泰勒展开，让梯度下降更准确：</p>
+            <div class="formula-box">
+                <div style="margin: 8px 0;">
+                    <strong>GBDT（一阶）：</strong> $L(y, \hat{y}) \approx L(y, \hat{y}^{(t-1)}) + g_i \cdot f_t(x_i)$
+                </div>
+                <div style="margin: 8px 0;">
+                    <strong>XGBoost（二阶）：</strong> $L(y, \hat{y}) \approx L(y, \hat{y}^{(t-1)}) + g_i \cdot f_t(x_i) + \frac{1}{2} h_i \cdot f_t(x_i)^2$
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    其中 $g_i = \frac{\partial L}{\partial \hat{y}^{(t-1)}}$ (一阶导数)，$h_i = \frac{\partial^2 L}{\partial (\hat{y}^{(t-1)})^2}$ (二阶导数)
+                </div>
+            </div>
+            
+            <div class="interactive-demo" style="margin-top: 15px;">
+                <p style="margin-bottom: 10px;"><strong>二阶导数优势演示：</strong></p>
+                <button class="demo-button" onclick="showSecondOrderDemo()">查看二阶导数优势</button>
+                <div id="second-order-output" style="margin-top: 12px; padding: 12px; background: white; border-radius: 6px; display: none;"></div>
+            </div>
+
+            <h3 style="color: #e67e22; margin-top: 20px; margin-bottom: 10px; font-size: 1.1em;">2. 正则化 - 控制树复杂度</h3>
+            <p>XGBoost的目标函数包含正则化项，防止过拟合：</p>
+            <div class="formula-box">
+                $$Obj = \sum_{i=1}^{n} L(y_i, \hat{y}_i) + \sum_{k=1}^{K} \Omega(f_k)$$
+                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    其中 $\Omega(f_k) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$<br>
+                    $T$ = 叶子节点数，$w_j$ = 叶子权重，$\gamma$ 和 $\lambda$ 是正则化参数
+                </div>
+            </div>
+
+            <div class="interactive-demo" style="margin-top: 15px;">
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 5px;">
+                        <strong>正则化参数：</strong>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">
+                                $\gamma$ (控制叶子节点数): <span id="gamma-value">0.1</span>
+                            </label>
+                            <input type="range" id="gamma-slider" min="0" max="2" step="0.1" value="0.1" 
+                                   style="width: 100%;" oninput="updateRegularization()">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">
+                                $\lambda$ (控制叶子权重): <span id="lambda-value">1.0</span>
+                            </label>
+                            <input type="range" id="lambda-slider" min="0" max="5" step="0.1" value="1.0" 
+                                   style="width: 100%;" oninput="updateRegularization()">
+                        </div>
+                    </div>
+                </div>
+                <div id="reg-output" style="margin-top: 12px; padding: 12px; background: white; border-radius: 6px;">
+                    <p style="margin-bottom: 8px;"><strong>当前正则化效果：</strong></p>
+                    <div id="reg-details"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📊 性能对比</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>特性</th>
+                    <th>GBDT</th>
+                    <th>XGBoost</th>
+                </tr>
+                <tr>
+                    <td>损失函数</td>
+                    <td>一阶梯度</td>
+                    <td>二阶泰勒展开</td>
+                </tr>
+                <tr>
+                    <td>正则化</td>
+                    <td>无</td>
+                    <td>树复杂度+叶子权重</td>
+                </tr>
+                <tr>
+                    <td>并行化</td>
+                    <td>有限</td>
+                    <td>支持</td>
+                </tr>
+                <tr>
+                    <td>速度</td>
+                    <td>中等</td>
+                    <td>快</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showSecondOrderDemo() {
+            const output = document.getElementById('second-order-output');
+            output.style.display = 'block';
+            output.innerHTML = 
+                '<h4 style="color: #27ae60; margin-bottom: 10px;">二阶导数的优势：</h4>' +
+                '<div style="line-height: 1.8;">' +
+                    '<p><strong>1. 更准确的步长：</strong>二阶导数 \\(h_i\\) 告诉我们损失函数的"曲率"，可以更精确地决定每一步走多远。</p>' +
+                    '<p><strong>2. 自适应学习：</strong>在平坦区域（\\(h_i\\) 小），步长大；在陡峭区域（\\(h_i\\) 大），步长小。这样梯度下降更自然、更稳定。</p>' +
+                    '<p><strong>3. 收敛更快：</strong>相比只用一阶梯度，二阶信息能更快找到最优解。</p>' +
+                '</div>' +
+                '<div style="margin-top: 12px; padding: 10px; background: #ecf0f1; border-radius: 4px; font-size: 0.9em;">' +
+                    '<strong>类比：</strong>就像下山时，不仅知道方向（一阶梯度），还知道坡度缓急（二阶导数），这样就能选择更合适的步长，避免走过头或走太慢。' +
+                '</div>';
+            
+            function renderMathJax() {
+                if (window.MathJax && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([output]).catch(function(err) {
+                        console.log('MathJax渲染错误:', err);
+                    });
+                } else if (window.MathJax && MathJax.startup) {
+                    MathJax.startup.promise.then(function() {
+                        if (MathJax.typesetPromise) {
+                            MathJax.typesetPromise([output]).catch(function(err) {
+                                console.log('MathJax渲染错误:', err);
+                            });
+                        }
+                    });
+                } else {
+                    setTimeout(renderMathJax, 200);
+                }
+            }
+            setTimeout(renderMathJax, 50);
+        }
+
+        function updateRegularization() {
+            const gamma = parseFloat(document.getElementById('gamma-slider').value);
+            const lambda = parseFloat(document.getElementById('lambda-slider').value);
+            document.getElementById('gamma-value').textContent = gamma.toFixed(1);
+            document.getElementById('lambda-value').textContent = lambda.toFixed(1);
+            
+            const details = document.getElementById('reg-details');
+            let html = '';
+            
+            // 分析gamma的影响
+            if (gamma < 0.5) {
+                html += '<p style="color: #e74c3c; margin: 5px 0;">⚠️ γ较小：对叶子节点数惩罚弱，树可能很深很复杂</p>';
+            } else if (gamma < 1.5) {
+                html += '<p style="color: #27ae60; margin: 5px 0;">✅ γ适中：有效控制树的深度和复杂度</p>';
+            } else {
+                html += '<p style="color: #f39c12; margin: 5px 0;">⚠️ γ过大：过度限制叶子节点，树可能太简单</p>';
+            }
+            
+            // 分析lambda的影响
+            if (lambda < 0.5) {
+                html += '<p style="color: #e74c3c; margin: 5px 0;">⚠️ λ较小：对叶子权重惩罚弱，权重可能过大</p>';
+            } else if (lambda < 3) {
+                html += '<p style="color: #27ae60; margin: 5px 0;">✅ λ适中：有效控制叶子权重，防止过拟合</p>';
+            } else {
+                html += '<p style="color: #f39c12; margin: 5px 0;">⚠️ λ过大：过度压缩权重，可能欠拟合</p>';
+            }
+            
+            // 综合效果
+            const totalReg = gamma + lambda;
+            html += '<div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;">';
+            html += '<strong>综合效果：</strong>';
+            if (totalReg < 1) {
+                html += '<span style="color: #e74c3c;"> 正则化较弱，容易过拟合</span>';
+            } else if (totalReg < 3) {
+                html += '<span style="color: #27ae60;"> 正则化适中，平衡良好</span>';
+            } else {
+                html += '<span style="color: #f39c12;"> 正则化较强，可能欠拟合</span>';
+            }
+            html += '</div>';
+            
+            details.innerHTML = html;
+        }
+        
+        // 初始化
+        updateRegularization();
+    </script>
+</body>
+</html>
+

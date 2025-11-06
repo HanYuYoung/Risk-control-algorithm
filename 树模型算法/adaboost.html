@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdaBoost - 串行提升</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="detail-page">
+        <a href="index.html" class="back-button">← 返回主页</a>
+
+        <div class="algorithm-header">
+            <h1>📈 AdaBoost</h1>
+            <span class="tag">串行提升</span>
+        </div>
+
+        <div class="content-section">
+            <h2>📚 什么是AdaBoost？</h2>
+            <p>AdaBoost（Adaptive Boosting）是1997年提出的集成学习算法。它通过串行训练多个弱分类器（通常是CART树），重点关注之前分错的样本。</p>
+            
+            <div class="image-container">
+                <img src="images/adaboost.png" alt="AdaBoost示意图">
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>🔑 核心思想</h2>
+            <p><strong>从"民主投票"进化到关注难点：</strong></p>
+            <ul style="line-height: 2; color: #555; list-style: none; padding-left: 0;">
+                <li><strong>错分样本权重↑：</strong>如果某个样本被分错了，下一棵树会更关注它（增加权重）</li>
+                <li><strong>弱树权重降低：</strong>如果某棵树预测准确率低，这棵树在最终投票中的权重也会降低</li>
+                <li><strong>交叉优化：</strong>样本权重和树权重是交叉优化的过程</li>
+            </ul>
+        </div>
+
+        <div class="formula-box">
+            <strong>最终预测公式：</strong><br>
+            <div style="font-size: 1.2em; margin: 10px 0;">
+                $$H(x) = \sum_{t=1}^{T} \alpha_t \cdot h_t(x)$$
+            </div>
+            <span style="font-size: 0.9em; color: #7f8c8d;">（每棵树的预测 × 树的权重，然后求和）</span>
+        </div>
+
+        <div class="tip-box">
+            <strong>💡 通俗理解：</strong>就像一群人投票，但有些人更专业（权重高），而且大家会特别关注之前容易搞错的案例（样本权重高）。如果某个人总是判断错，他的话就没什么分量。
+        </div>
+
+        <div class="content-section">
+            <h2>⚙️ 训练过程演示</h2>
+            <div class="interactive-demo">
+                <button class="demo-button" onclick="startAdaboostDemo()">开始演示</button>
+                <div id="demo-output" style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; min-height: 100px;"></div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📊 与CART的对比</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>特性</th>
+                    <th>CART</th>
+                    <th>AdaBoost</th>
+                </tr>
+                <tr>
+                    <td>树的数量</td>
+                    <td>1棵</td>
+                    <td>多棵（串行）</td>
+                </tr>
+                <tr>
+                    <td>样本权重</td>
+                    <td>相等</td>
+                    <td>动态调整</td>
+                </tr>
+                <tr>
+                    <td>过拟合风险</td>
+                    <td>高</td>
+                    <td>中等</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function startAdaboostDemo() {
+            const output = document.getElementById('demo-output');
+            output.innerHTML = '<p>正在演示AdaBoost训练过程...</p>';
+            
+            let step = 0;
+            const steps = [
+                { tree: 1, accuracy: 0.6, weight: 0.42, message: '第1棵树：准确率60%，权重0.42' },
+                { tree: 2, accuracy: 0.7, weight: 0.65, message: '第2棵树：准确率70%，权重0.65（关注错分样本）' },
+                { tree: 3, accuracy: 0.8, weight: 0.92, message: '第3棵树：准确率80%，权重0.92（继续优化）' },
+                { message: '最终预测：所有树的加权投票' }
+            ];
+
+            const interval = setInterval(() => {
+                if (step < steps.length) {
+                    const current = steps[step];
+                    output.innerHTML += `<p style="margin: 5px 0; padding: 8px; background: #ecf0f1; border-radius: 4px;">${current.message}</p>`;
+                    step++;
+                } else {
+                    clearInterval(interval);
+                    output.innerHTML += '<p style="color: #27ae60; font-weight: bold; margin-top: 10px;">✅ 演示完成！</p>';
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
+

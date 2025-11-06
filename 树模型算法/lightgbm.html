@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightGBM - 极致高效</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="detail-page">
+        <a href="index.html" class="back-button">← 返回主页</a>
+
+        <div class="algorithm-header">
+            <h1>💡 LightGBM</h1>
+            <span class="tag">极致高效</span>
+        </div>
+
+        <div class="content-section">
+            <h2>📚 什么是LightGBM？</h2>
+            <p>LightGBM是微软2017年推出的XGBoost轻量版。它在保持精度的同时，大幅提升了速度和内存效率。</p>
+            
+            <div class="image-container">
+                <img src="images/lightGBM.png" alt="LightGBM示意图">
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>🔑 核心优化</h2>
+            <ul style="line-height: 2; color: #555; list-style: none; padding-left: 0;">
+                <li><strong>直方图算法：</strong>减少Gini计算，加速分裂</li>
+                <li><strong>叶节点分裂（Leaf-wise）：</strong>不像XGBoost限定高度，而是根据信息增益选择最优叶子节点，可能形成很长的路径</li>
+                <li><strong>类别特征优化：</strong>直接处理类别特征，无需one-hot</li>
+                <li><strong>EFB捆绑：</strong>互斥特征捆绑，减少特征数量</li>
+            </ul>
+        </div>
+
+        <div class="tip-box">
+            <strong>💡 通俗理解：</strong>XGBoost是F1赛车，LightGBM是更轻、更快的F1赛车。它用更聪明的方法减少计算量（直方图），用更灵活的方式长树（叶子优先而不是层级限定），所以速度更快、内存更省。
+        </div>
+
+        <div class="content-section">
+            <h2>⚙️ 分裂方式对比</h2>
+            <div class="interactive-demo">
+                <button class="demo-button" onclick="showSplitComparison()">查看分裂方式对比</button>
+                <div id="split-comparison" style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;"></div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📊 性能对比</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>特性</th>
+                    <th>XGBoost</th>
+                    <th>LightGBM</th>
+                </tr>
+                <tr>
+                    <td>分裂方式</td>
+                    <td>Level-wise（按层）</td>
+                    <td>Leaf-wise（按叶子）</td>
+                </tr>
+                <tr>
+                    <td>特征处理</td>
+                    <td>预排序</td>
+                    <td>直方图</td>
+                </tr>
+                <tr>
+                    <td>速度</td>
+                    <td>快</td>
+                    <td>更快（3-5倍）</td>
+                </tr>
+                <tr>
+                    <td>内存</td>
+                    <td>较高</td>
+                    <td>更低</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="content-section">
+            <h2>🎯 适用场景</h2>
+            <p>LightGBM特别适合：</p>
+            <ul style="line-height: 2; color: #555; list-style: none; padding-left: 0;">
+                <li>大数据集（百万级样本）</li>
+                <li>内存受限的环境</li>
+                <li>需要快速迭代的场景</li>
+                <li>有类别特征的数据</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showSplitComparison() {
+            const output = document.getElementById('split-comparison');
+            output.innerHTML = `
+                <h3 style="color: #27ae60; margin-bottom: 15px;">分裂方式对比</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                        <h4 style="color: #e74c3c;">XGBoost: Level-wise</h4>
+                        <pre style="font-family: monospace; font-size: 0.9em;">
+        Level 1:    [根节点]
+        Level 2:  [左]  [右]
+        Level 3: [L][R][L][R]
+        </pre>
+                        <p style="font-size: 0.9em; color: #666;">按层分裂，控制高度</p>
+                    </div>
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                        <h4 style="color: #27ae60;">LightGBM: Leaf-wise</h4>
+                        <pre style="font-family: monospace; font-size: 0.9em;">
+        [根节点]
+          |
+        [左]--[右]
+          |
+       [深度路径]
+          |
+      [继续深入]
+        </pre>
+                        <p style="font-size: 0.9em; color: #666;">选择最优叶子，可能很深</p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+

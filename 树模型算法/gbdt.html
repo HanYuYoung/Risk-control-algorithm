@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBDT - 梯度提升</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="detail-page">
+        <a href="index.html" class="back-button">← 返回主页</a>
+
+        <div class="algorithm-header">
+            <h1>⚡ GBDT</h1>
+            <span class="tag">梯度提升</span>
+        </div>
+
+        <div class="content-section">
+            <h2>📚 什么是GBDT？</h2>
+            <p>GBDT（Gradient Boosting Decision Tree）是2001年提出的梯度提升算法。它用梯度下降的思想来建树，比AdaBoost更通用、更稳定。</p>
+            
+            <div class="image-container">
+                <img src="images/gbdt.png" alt="GBDT示意图">
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>🔑 核心思想</h2>
+            <p><strong>从权重→梯度：</strong></p>
+            <ul style="line-height: 2; color: #555; list-style: none; padding-left: 0;">
+                <li><strong>残差拟合：</strong>后面的树学习前面树的"残差"（预测误差）</li>
+                <li><strong>梯度方向：</strong>用梯度的负方向来建树，更通用</li>
+                <li><strong>每棵树学所有样本：</strong>但只学习错的，也就是残差</li>
+            </ul>
+        </div>
+
+        <div class="tip-box">
+            <strong>💡 通俗理解：</strong>假设第一棵树预测了 [1, 0, 1, 0, 1, 1, 1, 0, 1, 0]，但真实值是 [1, 0, 1, 0, 1, 1, 0, 0, 0, 0]。那么第二棵树就学习残差 [0, 0, 0, 0, 0, 0, -1, 0, -1, 0]（错的地方）。新的样本来了，结果就是第一棵树的预测 + 后面所有树的预测。
+        </div>
+
+        <div class="formula-box">
+            <strong>最终预测公式：</strong><br>
+            <div style="font-size: 1.2em; margin: 10px 0;">
+                $$F(x) = F_0(x) + \sum_{t=1}^{T} f_t(x)$$
+            </div>
+            <span style="font-size: 0.9em; color: #7f8c8d;">（初始预测 + 所有树的残差预测）</span>
+        </div>
+
+        <div class="content-section">
+            <h2>⚙️ 残差学习演示</h2>
+            <div class="interactive-demo">
+                <button class="demo-button" onclick="showResidualDemo()">演示残差学习</button>
+                <div id="residual-output" style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px;"></div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📊 与AdaBoost的对比</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>特性</th>
+                    <th>AdaBoost</th>
+                    <th>GBDT</th>
+                </tr>
+                <tr>
+                    <td>优化方式</td>
+                    <td>样本权重</td>
+                    <td>梯度/残差</td>
+                </tr>
+                <tr>
+                    <td>适用性</td>
+                    <td>分类为主</td>
+                    <td>分类+回归</td>
+                </tr>
+                <tr>
+                    <td>稳定性</td>
+                    <td>中等</td>
+                    <td>更好</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showResidualDemo() {
+            const output = document.getElementById('residual-output');
+            const trueValues = [1, 0, 1, 0, 1, 1, 0, 0, 0, 0];
+            const tree1Pred = [1, 0, 1, 0, 1, 1, 1, 0, 1, 0];
+            const residual = trueValues.map((val, i) => val - tree1Pred[i]);
+            
+            output.innerHTML = `
+                <h3 style="color: #27ae60; margin-bottom: 15px;">残差学习过程</h3>
+                <p><strong>真实值：</strong> [${trueValues.join(', ')}]</p>
+                <p><strong>第1棵树预测：</strong> [${tree1Pred.join(', ')}]</p>
+                <p style="color: #e74c3c;"><strong>残差（第2棵树学习）：</strong> [${residual.join(', ')}]</p>
+                <p style="margin-top: 15px; padding: 10px; background: #ecf0f1; border-radius: 4px;">
+                    第2棵树专门学习这些残差，修正第1棵树的错误！
+                </p>
+                <p style="margin-top: 10px;"><strong>最终预测 = 第1棵树 + 第2棵树 + ... + 第N棵树</strong></p>
+            `;
+        }
+    </script>
+</body>
+</html>
+
