@@ -2,7 +2,7 @@
 
 一个美观、交互式的网页展示，介绍从CART树到LightGBM的算法演进历程。
 
-![项目预览](images/image.png)
+![项目预览](./images/image.png)
 
 ## 🚀 快速开始
 
