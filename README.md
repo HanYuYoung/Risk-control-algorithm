@@ -1,4 +1,11 @@
-# 🚀 风控算法
+## 🚀 风控算法项目集 | Risk Control Algorithm Portfolio
+
+**个人学习项目**，覆盖 **反欺诈、信用评分、薅羊毛API流量风控、团伙检测、序列预测** 五大风控场景  
+
+**技术栈**：Python | 树模型（XGBoost、LightGBM、孤立森林等）| 图模型（GCN、GAT等）| 时序模型（LSTM、Transformer等）| louvain社区发现算法
+**目标**：投递 **风控算法工程师** 岗位
+
+---
 
 ## 📁 项目内容
 
