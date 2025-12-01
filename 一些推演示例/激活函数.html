@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2025 激活函数全图解 + 攻略</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      color: #2c3e50;
+      background: #f8f9fa;
+      margin: 0; padding: 20px;
+    }
+    .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+    .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+    h2 { color: #2980b9; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-top: 40px; }
+    h3 { color: #16a085; margin-top: 25px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #3498db; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; margin: 2px; font-weight: bold; }
+    .best { background: #27ae60; color: white; }
+    .good { background: #f39c12; color: white; }
+    .avoid { background: #c0392b; color: white; }
+    .code { background: #2c3e50; color: #f1c40f; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    .formula { font-size: 0.95em; display: inline-block; }
+    canvas { height: 180px !important; width: 100%; }
+    .table-chart { width: 180px; height: 180px !important; }
+    .summary-box { background: #e8f4fc; padding: 15px; border-left: 5px solid #3498db; border-radius: 0 8px 8px 0; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 50px; color: #95a5a6; font-size: 0.9em; padding-top: 20px; border-top: 1px solid #eee; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #eee; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>深度学习激活函数全攻略 + 图解</h1>
+<p class="subtitle">梯度消失？爆炸？饱和？不对称？一文讲透本质 + 工业共识 + 实时曲线</p>
+
+<div class="summary-box">
+  <strong>核心结论（三句话记住）：</strong><br>
+  1. <strong>视觉用 <code>SiLU</code>，语言用 <code>GELU</code>，移动用 <code>h-swish</code></strong><br>
+  2. <strong>ReLU + BatchNorm 永远不会错</strong><br>
+  3. <strong>Mish / ELU / Softplus 都是论文玩具，工业界已抛弃</strong>
+</div>
+
+<h2>激活函数总览表</h2>
+<table>
+  <tr>
+    <th>激活函数</th>
+    <th>公式</th>
+    <th>函数图</th>
+    <th>导数范围</th>
+    <th>以0为中心</th>
+    <th>计算量</th>
+    <th>工业推荐</th>
+    <th>使用场景</th>
+  </tr>
+  <tr>
+    <td><strong>ReLU</strong></td>
+    <td><span class="formula">\( \max(0, z) \)</span></td>
+    <td><canvas class="table-chart" id="reluTableChart"></canvas></td>
+    <td><span class="formula">\( \{0, 1\} \)</span></td>
+    <td>否</td>
+    <td>极低</td>
+    <td><span class="tag best">主流</span></td>
+    <td>CNN + BN</td>
+  </tr>
+  <tr>
+    <td><strong>SiLU (Swish)</strong></td>
+    <td><span class="formula">\( z \cdot \sigma(z) \)</span></td>
+    <td><canvas class="table-chart" id="siluTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1] \)</span></td>
+    <td>近似</td>
+    <td>低</td>
+    <td><span class="tag best">视觉标配</span></td>
+    <td>EfficientNet, YOLOv8</td>
+  </tr>
+  <tr>
+    <td><strong>GELU</strong></td>
+    <td><span class="formula">\( z \cdot \Phi(z) \)</span></td>
+    <td><canvas class="table-chart" id="geluTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1] \)</span></td>
+    <td>是</td>
+    <td>中</td>
+    <td><span class="tag best">NLP标配</span></td>
+    <td>BERT, LLaMA, ViT</td>
+  </tr>
+  <tr>
+    <td><strong>h-swish</strong></td>
+    <td><span class="formula">\( z \cdot \frac{\operatorname{ReLU6}(z+3)}{6} \)</span></td>
+    <td><canvas class="table-chart" id="hswishTableChart"></canvas></td>
+    <td><span class="formula">\( [0, 1] \)</span></td>
+    <td>否</td>
+    <td>低</td>
+    <td><span class="tag best">移动端</span></td>
+    <td>MobileNetV3</td>
+  </tr>
+  <tr>
+    <td><strong>Tanh</strong></td>
+    <td><span class="formula">\( \tanh(z) \)</span></td>
+    <td><canvas class="table-chart" id="tanhTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1] \)</span></td>
+    <td>是</td>
+    <td>中</td>
+    <td><span class="tag good">RL输出</span></td>
+    <td>LSTM, 动作归一化</td>
+  </tr>
+  <tr>
+    <td><strong>Sigmoid</strong></td>
+    <td><span class="formula">\( \frac{1}{1+e^{-z}} \)</span></td>
+    <td><canvas class="table-chart" id="sigmoidTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 0.25] \)</span></td>
+    <td>否</td>
+    <td>高</td>
+    <td><span class="tag avoid">仅输出层</span></td>
+    <td>二分类</td>
+  </tr>
+  <tr>
+    <td><strong>LeakyReLU</strong></td>
+    <td><span class="formula">\( \max(0.01z, z) \)</span></td>
+    <td><canvas class="table-chart" id="leakyTableChart"></canvas></td>
+    <td><span class="formula">\( (0.01, 1] \)</span></td>
+    <td>否</td>
+    <td>低</td>
+    <td><span class="tag good">简单任务</span></td>
+    <td>防死神经元</td>
+  </tr>
+  <tr>
+    <td><strong>ELU</strong></td>
+    <td><span class="formula">\( \begin{cases} z, & z \ge 0 \\ \alpha \left(e^{z}-1\right), & z < 0 \end{cases} \)</span></td>
+    <td><canvas class="table-chart" id="eluTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1] \)</span></td>
+    <td>是</td>
+    <td>高 (exp)</td>
+    <td><span class="tag avoid">慢</span></td>
+    <td>曾用，已弃</td>
+  </tr>
+  <tr>
+    <td><strong>Mish</strong></td>
+    <td><span class="formula">\( z \cdot \tanh(\operatorname{softplus}(z)) \)</span></td>
+    <td><canvas class="table-chart" id="mishTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1] \)</span></td>
+    <td>近似</td>
+    <td>很高</td>
+    <td><span class="tag avoid">论文玩具</span></td>
+    <td>几乎不用</td>
+  </tr>
+  <tr>
+    <td><strong>Softplus</strong></td>
+    <td><span class="formula">\( \log \left(1 + e^{z}\right) \)</span></td>
+    <td><canvas class="table-chart" id="softplusTableChart"></canvas></td>
+    <td><span class="formula">\( (0, 1) \)</span></td>
+    <td>严重右偏</td>
+    <td>高</td>
+    <td><span class="tag avoid">偏+慢</span></td>
+    <td>无人用</td>
+  </tr>
+</table>
+
+<h2>梯度消失/爆炸本质</h2>
+<ul>
+  <li><strong>梯度消失</strong>：导数 \( < 1 \) 连乘 \( \to 0 \)（如 Sigmoid: \( 0.25^{10} = 10^{-6} \)）</li>
+  <li><strong>梯度爆炸</strong>：导数 \( > 1 \) 连乘 \( \to \infty \)（需初始化 + 裁剪）</li>
+  <li><strong>ReLU</strong>：\( f'(z) = 1 \) → 不消失不爆炸</li>
+  <li><strong>负区导数 > 0</strong> → 防死，平均 \( < 1 \) → 不爆炸</li>
+  <li><strong>梯度 \( \approx 0 \) 并不代表学好了！</strong> 99% 是 <strong>饱和</strong>，不是最优</li>
+</ul>
+
+<h2>工业界真实选择（2025）</h2>
+<table>
+  <tr><th>领域</th><th>模型</th><th>激活函数</th></tr>
+  <tr><td>计算机视觉</td><td>ResNet, YOLOv8</td><td><span class="tag best">SiLU</span> / ReLU+BN</td></tr>
+  <tr><td>Transformer/NLP</td><td>BERT, LLaMA</td><td><span class="tag best">GELU</span></td></tr>
+  <tr><td>移动端</td><td>MobileNetV3</td><td><span class="tag best">h-swish</span></td></tr>
+  <tr><td>扩散模型</td><td>Stable Diffusion</td><td><span class="tag best">SiLU</span></td></tr>
+  <tr><td>强化学习</td><td>PPO</td><td><span class="tag good">Tanh (输出)</span></td></tr>
+</table>
+
+<h2>推荐代码模板</h2>
+<pre># 视觉任务
+nn.Conv2d(...) → nn.BatchNorm2d() → <strong>nn.SiLU()</strong>  # or nn.ReLU()
+
+# Transformer
+nn.Linear(...) → <strong>nn.GELU()</strong>
+
+# 移动端
+<strong>nn.Hardswish()</strong>
+
+# 输出层
+nn.Sigmoid()  # 二分类
+nn.Tanh()     # 动作归一化
+</pre>
+
+<div class="footer">
+  <p>by <strong>Grok</strong> | 2025-11-14 | 基于工业界真实实践 · <strong>已去掉悬浮值</strong> · 适合打印/投屏</p>
+</div>
+
+</div>
+
+<script>
+// 去掉 tooltip：禁用 interaction
+Chart.defaults.interaction.mode = null;
+Chart.defaults.plugins.tooltip.enabled = false;
+
+// 数据生成
+const z = Array.from({length: 201}, (_, i) => (i - 100) * 0.1);
+function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+function tanh(x) { return Math.tanh(x); }
+function softplus(x) { return Math.log(1 + Math.exp(x)); }
+function gelu(x) { return x * 0.5 * (1 + erf(x / Math.sqrt(2))); }
+function hswish(x) { const r = Math.min(6, Math.max(0, x + 3)); return (x * r) / 6; }
+function dHswish(x) {
+  if (x <= -3) return 0;
+  if (x >= 3) return 1;
+  return (2 * x + 3) / 6;
+}
+function erf(x) { const t = 1/(1+0.3275911*Math.abs(x)); const a=[0.254829592,-0.284496736,1.421413741,-1.453152027,1.061405429]; let sum=t*a[0]; for(let i=1;i<5;i++)sum=(sum+t)*a[i]; return x>=0?1-Math.exp(-x*x)*sum*t:Math.exp(-x*x)*sum*t-1; }
+
+// 图表配置（无 tooltip）
+const config = (data, opts = {}) => {
+  const { title = null, yMin = -1.5, yMax = 1.5 } = opts;
+  return ({
+  type: 'line',
+  data: { labels: z, datasets: [
+    { label: 'f(z)', data: data.f, borderColor: '#3498db', tension: 0.1, pointRadius: 0, fill: false },
+    { label: "f'(z)", data: data.df, borderColor: '#e74c3c', tension: 0.1, pointRadius: 0, borderDash: [6, 4], fill: false }
+  ]},
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { 
+      title: { display: Boolean(title), text: title || '', font: { size: 13 } },
+      legend: { display: false },
+      tooltip: { enabled: false }  // 关键：关闭悬浮提示
+    },
+    interaction: { mode: null },
+    scales: { x: { display: false }, y: { min: yMin, max: yMax } }
+  }
+  });
+};
+
+const chartDefinitions = [
+  {
+    id: 'reluTableChart',
+    data: {
+      f: z.map(x => Math.max(0, x)),
+      df: z.map(x => x > 0 ? 1 : 0)
+    }
+  },
+  {
+    id: 'siluTableChart',
+    data: {
+      f: z.map(x => x * sigmoid(x)),
+      df: z.map(x => { const s = sigmoid(x); return s * (1 + x * (1 - s)); })
+    }
+  },
+  {
+    id: 'geluTableChart',
+    data: {
+      f: z.map(gelu),
+      df: z.map(x => 0.5 * (1 + erf(x/Math.sqrt(2)) + x * (2/Math.sqrt(Math.PI)) * Math.exp(-0.5*x*x)))
+    }
+  },
+  {
+    id: 'hswishTableChart',
+    data: {
+      f: z.map(hswish),
+      df: z.map(dHswish)
+    }
+  },
+  {
+    id: 'tanhTableChart',
+    data: {
+      f: z.map(tanh),
+      df: z.map(x => 1 - Math.pow(tanh(x), 2))
+    }
+  },
+  {
+    id: 'sigmoidTableChart',
+    data: {
+      f: z.map(sigmoid),
+      df: z.map(x => { const s = sigmoid(x); return s * (1 - s); })
+    }
+  },
+  {
+    id: 'leakyTableChart',
+    data: {
+      f: z.map(x => x > 0 ? x : 0.01 * x),
+      df: z.map(x => x > 0 ? 1 : 0.01)
+    }
+  },
+  {
+    id: 'eluTableChart',
+    data: {
+      f: z.map(x => x >= 0 ? x : Math.exp(x) - 1),
+      df: z.map(x => x >= 0 ? 1 : Math.exp(x))
+    }
+  },
+  {
+    id: 'mishTableChart',
+    data: {
+      f: z.map(x => x * tanh(softplus(x))),
+      df: z.map(x => { const sp = softplus(x); const omega = 4*(x+1) + Math.exp(2*x) + 4*Math.exp(x); return (Math.exp(x) * omega) / Math.pow(2*Math.exp(x) + 2 + 2*Math.exp(x), 2); })
+    }
+  },
+  {
+    id: 'softplusTableChart',
+    data: {
+      f: z.map(softplus),
+      df: z.map(sigmoid)
+    }
+  }
+];
+
+chartDefinitions.forEach(({ id, data }) => {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const allValues = data.f.concat(data.df);
+  const min = Math.min(...allValues);
+  const max = Math.max(...allValues);
+  const range = max - min;
+  const padding = Math.max(0.5, range === 0 ? 1 : range * 0.1);
+  const yMin = min - padding;
+  const yMax = max + padding;
+  new Chart(canvas, config(data, { yMin, yMax }));
+});
+</script>
+
+</body>
+</html>
