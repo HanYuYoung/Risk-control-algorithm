@@ -1,0 +1,28 @@
+FastViT 是 Apple 2023 年提出的 CNN  4stage 只在最后一个用了self attention 架构，MA是MetaFormer的变体，强调大核卷积 用 RepMixer（Token Mixer）取代了 ViT 的自注意力，用大核深度卷积+浅层结构，实现 MobileNetV2 级别的速度。叫 Fast 因为：无自注意力二次复杂度
+
+推理时把 整个跳连接 + 多分支 全部融合进一个等效的 DWConv3×3 里，跳连接彻底消失。没有残差分支、没有额外内存读写
+
+Stage1RepMixer × 2 + Patch Merging
+Stage2RepMixer × 4 + Patch Merging
+Stage3RepMixer × 6 → 第一个全局注意力
+Stage4RepMixer × 4 + 全局自注意力（高效版）
+HeadGlobal AvgPool + 1×1 Conv
+
+对比标准 MHSA（QKV 三支 + 196×196 矩阵乘）：去掉了 QKV 线性投影（用 DWConv 代替局部生成）
+Attention Map 直接在通道维度 Softmax，不搞 Q·Kᵀ   整个模块还是倒残差结构，完美适配移动端
+
+-----------------------------------------------------------------------
+
+torch.clamp → min/max 写法会被拆成多个算子
+Upsample 的 scale_factor 必须是整数
+动态 shape 不支持
+LayerNorm 在部分版本直接 OOM，要换成 BatchNorm 冻结”
+onnx导出版本
+
+-----------------------------------------------------------------------
+
+结构化剪枝L1
+让模型给不重要的通道权重趋近于0，用L1正则化到BN层（L1本身正则化具有稀疏性）许多BN层的权重会变小，对BN层权重排序移除掉，重新微调一遍（降低学习率小幅度调整）
+剪枝0.3 快了15%  计算量20%  map下降2%
+
+

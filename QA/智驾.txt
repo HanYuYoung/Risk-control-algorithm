@@ -1,0 +1,19 @@
+llama3 8B跑在4090是什么速度
+FP16 8B在4090上，30 tokens短任务并发30-50
+但Q4更省显存，30 tokens 短任务能并行 60~80 个请求，响应还是毫秒级
+Q4量化（准确说是Q4_K_M）就是把Llama 3的权重从FP16（16位浮点）压到平均4位 原来16GB的模型 → 变成约4.8GB，显存省3倍，速度还更快 4090的Tensor Core对INT4算力爆表，一次搬4倍数据，带宽利用率拉满
+拿到原始FP16权重 把权重矩阵切成很多小块，Llama 3 默认每块 64 个权重 对每一块先跑一次轻量 K-means 聚类，把 64 个权重分成 6 个子组→ 幅度大的权重聚到“重要子组”，幅度小的聚到“普通子组”对每个子组分别计算自己的缩放因子 scale（重要子组 scale 更精细）→ scale = 该子组最大绝对值 ÷ 7（因为4位有符号整数范围 -7 到 +7）
+真正量化（这一步才真正变成4位）：每个原始权重 ÷ 它所属子组的 scale → 四舍五入取整 → 得到 -7 到 +7 的整数
+← 这就是第5步！然后把这些整数打包成4位存下来  最终只保存：一堆4位整数 + 每块几个16位 scale（极少）
+----------------------------
+
+fastvit模型对比都用了哪些？最后采用的是fastvit哪个模型训练的
+MobileNetV4（纯CNN，高效但精度一般）、MobileOne（reparam优化，移动甜点）、RepViT（ViT-like CNN，超低延迟）、FastViT-SA12（小规模FastViT，平衡型）、FastViT-SA24（中型，精度更高）。
+FastViT-SA12/24精度高（82.6%），但NPU上ViT attention碎片化，延迟高15%；MobileNetV4/MobileOne纯CNN兼容好，但精度掉2-3%。RepViT用reparam全CNN结构，完美适配RKNN（支持DWConv/RepMixer），吞吐高20%，功耗低，部署零改动。
+
+repvitblock
+1×1 升维
+大核DWConv（默认kernel=7） → 做spatial mixing（代替attention）
+SE通道注意力（挤压-激励）
+1×1 降维回原通道
+残差连接 + LayerScale + Stochastic Depth（训练技巧）
