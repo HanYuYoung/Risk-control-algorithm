@@ -1,0 +1,43 @@
+transformer下面为什么要除根号dk
+1.Q和K点积除以根号dk是为了防止值多大导致softmax梯度过小的梯度消失问题。
+2.除以根号dk可以将点积标准化为1，使训练更稳定。
+
+
+多头注意力怎么进行计算优化，deepseek和qwen又是怎么优化的？
+分组查询注意力（每组Q头共享一组K/V头）
+多查询注意力（保持多个Q头（多查询），但所有Q头共享同一个K头和V头）
+KV缓存
+DeepSeek：MLA
+Qwen：GQA
+
+写一个python函数传入数组和target返回两数之和=targer的两数下标，要求返回数组
+def two_sum(nums,target):
+    for i in range(0,len(nums)):
+       for j in range(i+1,len(nums)):
+          if(nums[i]+nums[j]==target):
+              return [i,j]
+
+python中哪种类型是可变的
+可变的：列表 字典 set
+不可变：int float bool 元组
+
+学生表（sid，sex，grad），成绩表（cid，sid，score）写sql求选修超过两门课的学生的学号
+select s.sid
+from Student s
+join Score c on s.sid=c.sid
+group by s.sid
+having count(c.cid)>=2
+
+lora的原理和优点，可以一个基准模型+n个lora吗？
+是一种高效微调的方法，在预训练的权重矩阵w基础上，不直接更新w，而是用低秩矩阵Δw=A*B ，A和B都是小矩阵。训练时只更新A和B，推理时合并w+Δw
+训练时候只需要少数参数，lora模块小，可独立存储，不破坏原来的模型w，并且泛化性好，可以防止过拟合
+
+1000瓶药水，一个有毒，有毒的药水一小时后生效，需要多少小白鼠可以找到有毒的药水？
+10个就行 2的10次方>1000
+12个球，有一个球是轻的，问最少需要多少次天平称重可以找到轻的球？如果这个球不知道轻重有需要多少次？
+3次 3次
+多线程任务中，IO密集型和CPU密集型，哪个效率更高？
+IO
+
+石头剪子布三局两胜 2：1出现的概率大还是2：0出现的概率大？
+一样
